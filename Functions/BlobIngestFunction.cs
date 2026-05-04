@@ -8,12 +8,9 @@ namespace FunctionApp1.Functions;
 
 /// <summary>
 /// Trigger 1 — Blob Trigger.
-/// Fires when a CSV is uploaded to the "incoming" blob container. Parses the
-/// file, records a tracking row in FileIngestions, and fans out one Service
-/// Bus message per CSV row to the "contacts-queue".
+/// Fires when a CSV is uploaded to the "incoming" blob container. Parses the file, records a tracking row in FileIngestions, and fans out one Service Bus message per CSV row to the "contacts-queue".
 ///
-/// Idempotency (spec option c): if a FileIngestion row with the same
-/// (FileName, RowCount) already exists we skip processing entirely.
+/// If a FileIngestion row with the same (FileName, RowCount) already exists we skip processing entirely.
 /// </summary>
 public class BlobIngestFunction
 {
