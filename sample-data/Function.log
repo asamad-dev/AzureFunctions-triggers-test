@@ -1,0 +1,52 @@
+Azure Functions Core Tools
+Core Tools Version:       4.10.0+2ced9a89e29b04615bc55cd527c074250266362f (64-bit)
+Function Runtime Version: 4.1048.200.26180
+
+[2026-05-04T20:07:54.642Z] Found /Users/abdulsamad/DEV/Lumovy/AzureFunctions-triggers-test/FunctionApp1.csproj. Using for user secrets file configuration.
+[2026-05-04T20:07:56.497Z] Worker process started and initialized.
+
+Functions:
+
+        ArchiveFunction: serviceBusTrigger
+
+        BlobIngestFunction: blobTrigger
+
+        RowProcessorFunction: serviceBusTrigger
+
+For detailed output, run func with --verbose flag.
+[2026-05-04T20:08:01.527Z] Host lock lease acquired by instance ID '00000000000000000000000065A2B61B'.
+[2026-05-04T20:11:35.600Z] Executing 'Functions.BlobIngestFunction' (Reason='New blob detected(LogsAndContainerScan): incoming/contacts.csv', Id=0c49be7a-0bd0-44ae-9fca-b2500e731dfb)
+[2026-05-04T20:11:35.600Z] Trigger Details: MessageId: e5811c2a-680d-4ca7-9d8c-3033610fdabb, DequeueCount: 1, InsertedOn: 2026-05-04T20:11:35.000+00:00, BlobCreated: 2026-05-04T20:11:34.000+00:00, BlobLastModified: 2026-05-04T20:11:34.000+00:00
+[2026-05-04T20:11:35.704Z] BlobIngest: received blob contacts.csv
+[2026-05-04T20:11:36.053Z] SQL database ContactsDb ensured.
+[2026-05-04T20:11:36.068Z] SQL schema ensured (FileIngestions, Contacts).
+[2026-05-04T20:11:36.120Z] BlobIngest: created ingestion 1 for contacts.csv with 5 rows.
+[2026-05-04T20:11:36.123Z] BlobIngest: enqueuing 5 messages to contacts-queue for contacts.csv.
+[2026-05-04T20:11:36.276Z] Executing 'Functions.RowProcessorFunction' (Reason='(null)', Id=a0279bf1-a18a-459c-ae24-37e99d8137e3)
+[2026-05-04T20:11:36.276Z] Executing 'Functions.RowProcessorFunction' (Reason='(null)', Id=16c75d73-a279-403b-b347-6dfdfa7c1457)
+[2026-05-04T20:11:36.276Z] Executing 'Functions.RowProcessorFunction' (Reason='(null)', Id=0887161b-eb36-4439-b526-a14e1c28d636)
+[2026-05-04T20:11:36.276Z] Trigger Details: MessageId: ad6ebe35263949da83e1516f2b44daaf, SequenceNumber: 2, DeliveryCount: 1, EnqueuedTimeUtc: 2026-05-04T20:11:36.2610000+00:00, LockedUntilUtc: 2026-05-04T20:12:36.2650000+00:00, SessionId: (null)
+[2026-05-04T20:11:36.276Z] Trigger Details: MessageId: 06ef1f1253844f228ed70bf6a1069816, SequenceNumber: 3, DeliveryCount: 1, EnqueuedTimeUtc: 2026-05-04T20:11:36.2660000+00:00, LockedUntilUtc: 2026-05-04T20:12:36.2700000+00:00, SessionId: (null)
+[2026-05-04T20:11:36.276Z] Trigger Details: MessageId: 7319b73cb3834752ac9c201dbf626d3c, SequenceNumber: 1, DeliveryCount: 1, EnqueuedTimeUtc: 2026-05-04T20:11:36.1860000+00:00, LockedUntilUtc: 2026-05-04T20:12:36.2590000+00:00, SessionId: (null)
+[2026-05-04T20:11:36.277Z] Executing 'Functions.RowProcessorFunction' (Reason='(null)', Id=29d802eb-1db8-4de6-9f18-05df3ff50d09)
+[2026-05-04T20:11:36.277Z] Trigger Details: MessageId: eb0d19d0125d4ec3b991f0deb8f2c1bd, SequenceNumber: 4, DeliveryCount: 1, EnqueuedTimeUtc: 2026-05-04T20:11:36.2710000+00:00, LockedUntilUtc: 2026-05-04T20:12:36.2740000+00:00, SessionId: (null)
+[2026-05-04T20:11:36.281Z] Executing 'Functions.RowProcessorFunction' (Reason='(null)', Id=145997a0-fbc5-4648-a696-3144c662b528)
+[2026-05-04T20:11:36.281Z] Trigger Details: MessageId: ae352ea49c17417a8e8289c1bb3813f6, SequenceNumber: 5, DeliveryCount: 1, EnqueuedTimeUtc: 2026-05-04T20:11:36.2750000+00:00, LockedUntilUtc: 2026-05-04T20:12:36.2790000+00:00, SessionId: (null)
+[2026-05-04T20:11:36.282Z] RowProcessor: contacts.csv row 4/5 (ethan@example.com)
+[2026-05-04T20:11:36.282Z] RowProcessor: contacts.csv row 1/5 (bob@example.com)
+[2026-05-04T20:11:36.282Z] RowProcessor: contacts.csv row 0/5 (alice@example.com)
+[2026-05-04T20:11:36.282Z] RowProcessor: contacts.csv row 2/5 (charlie@example.com)
+[2026-05-04T20:11:36.282Z] RowProcessor: contacts.csv row 3/5 (dana@example.com)
+[2026-05-04T20:11:36.285Z] Executed 'Functions.BlobIngestFunction' (Succeeded, Id=0c49be7a-0bd0-44ae-9fca-b2500e731dfb, Duration=697ms)
+[2026-05-04T20:11:36.297Z] Executed 'Functions.RowProcessorFunction' (Succeeded, Id=145997a0-fbc5-4648-a696-3144c662b528, Duration=16ms)
+[2026-05-04T20:11:36.298Z] Executed 'Functions.RowProcessorFunction' (Succeeded, Id=a0279bf1-a18a-459c-ae24-37e99d8137e3, Duration=25ms)
+[2026-05-04T20:11:36.301Z] Executed 'Functions.RowProcessorFunction' (Succeeded, Id=16c75d73-a279-403b-b347-6dfdfa7c1457, Duration=28ms)
+[2026-05-04T20:11:36.302Z] Executed 'Functions.RowProcessorFunction' (Succeeded, Id=0887161b-eb36-4439-b526-a14e1c28d636, Duration=29ms)
+[2026-05-04T20:11:36.306Z] RowProcessor: contacts.csv completed (5/5), emitting tick.
+[2026-05-04T20:11:36.338Z] Executed 'Functions.RowProcessorFunction' (Succeeded, Id=29d802eb-1db8-4de6-9f18-05df3ff50d09, Duration=61ms)
+[2026-05-04T20:11:36.338Z] Executing 'Functions.ArchiveFunction' (Reason='(null)', Id=8cd23abb-ede5-4bcf-a819-4ec4907f9e64)
+[2026-05-04T20:11:36.338Z] Trigger Details: MessageId: 78f74fe9811846fbb4d9a3226d03a276, SequenceNumber: 1, DeliveryCount: 1, EnqueuedTimeUtc: 2026-05-04T20:11:36.3260000+00:00, LockedUntilUtc: 2026-05-04T20:12:36.3360000+00:00, SessionId: (null)
+[2026-05-04T20:11:36.342Z] Archive: tick received for contacts.csv (5 rows)
+[2026-05-04T20:11:36.370Z] Archive: creating contacts.csv in archive container.
+[2026-05-04T20:11:36.377Z] Archive: wrote 259 bytes (5 rows) for contacts.csv.
+[2026-05-04T20:11:36.377Z] Executed 'Functions.ArchiveFunction' (Succeeded, Id=8cd23abb-ede5-4bcf-a819-4ec4907f9e64, Duration=38ms)
