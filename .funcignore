@@ -1,0 +1,25 @@
+# IDE working directories (often have locked files when IDE is open)
+.vs
+.vscode
+.idea
+*.user
+*.suo
+
+# Source control
+.git
+.gitignore
+.gitattributes
+
+# Local development - never deploy these
+local.settings.json
+docker-compose.yml
+servicebus-emulator
+.dockerignore
+
+# Project documentation - not runtime artefacts
+README.md
+Spec
+sample-data
+
+# Build intermediates (publish output is taken from bin/publish via dotnet publish)
+obj

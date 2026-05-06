@@ -21,3 +21,10 @@ Trigger 3: Queue Trigger 2
 Notes:
 1. Connect blob and service bus via connection string.
 2. see image.png to get more idea about the architecture of the project.
+
+
+Azure:
+1. resource of azure function using consumption plan (classic) on cloud
+2. make a resource azure service (basic or standard) 
+make a queue in it 
+3. connect blob via connection string first but then connect service bus or blob not using connection string but via managed identity 
