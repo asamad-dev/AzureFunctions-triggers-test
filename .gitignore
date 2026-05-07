@@ -10,6 +10,8 @@
 .vs/
 *vs
 
+publish/
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
