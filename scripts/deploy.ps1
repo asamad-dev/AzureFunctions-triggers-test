@@ -21,8 +21,8 @@ Write-Host "========================================`n" -ForegroundColor Cyan
 # Step 1: Health check (optional)
 if (-not $SkipHealthCheck) {
     Write-Host "[1/6] Running health check..." -ForegroundColor Yellow
-    if (Test-Path ".\azure-health-check.ps1") {
-        .\azure-health-check.ps1 -AutoFix
+    if (Test-Path "$PSScriptRoot\azure-health-check.ps1") {
+        & "$PSScriptRoot\azure-health-check.ps1" -AutoFix
         Write-Host ""
     } else {
         Write-Host "  [SKIP] Health check script not found, skipping..." -ForegroundColor Gray

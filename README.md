@@ -70,7 +70,7 @@ All commands below assume you are inside the project folder.
 
 1. **Start the infra** (Azurite + SQL Edge + Service Bus emulator):
    ```bash
-   docker compose up -d
+   docker compose -f infra/docker-compose.yml up -d
    ```
 
 2. **Create the blob containers** (one-time):
@@ -131,25 +131,27 @@ AzureFunctions-triggers-test/
   Services/
     CsvService.cs               # CsvHelper wrapper
     SqlRepository.cs            # DB bootstrap + CRUD
-  Spec/
+  docs/
     spec.md, image.png          # original task spec
     azure-deployment.md         # Azure resource creation guide
+  infra/
+    docker-compose.yml          # Azurite + SQL Edge + Service Bus emulator
+    servicebus-emulator/
+      Config.json               # local SB emulator queue config
+  scripts/
+    azure-health-check.ps1      # pre-deploy health check (see PowerShell Scripts below)
+    deploy.ps1                  # automated full deployment
   sample-data/
     contacts.csv                # sample input
-  servicebus-emulator/
-    Config.json                 # local SB emulator queue config
   Program.cs                    # DI wiring
   host.json                     # Service Bus concurrency tuning
   local.settings.json           # connection strings (local dev only, not committed)
-  docker-compose.yml            # Azurite + SQL Edge + Service Bus emulator
   FunctionApp1.csproj           # project file (.NET 8 isolated worker)
-  azure-health-check.ps1        # pre-deploy health check (see PowerShell Scripts below)
-  deploy.ps1                    # automated full deployment
 ```
 
 ## Azure deployment
 
-See **[Spec/azure-deployment.md](Spec/azure-deployment.md)** for the complete step-by-step guide to provisioning all Azure resources and deploying the code.
+See **[docs/azure-deployment.md](docs/azure-deployment.md)** for the complete step-by-step guide to provisioning all Azure resources and deploying the code.
 
 ### Known deployment issue — solution file interferes with `func publish`
 
@@ -189,5 +191,5 @@ of each file if your resource names differ.
 
 | Script | Purpose |
 |--------|---------|
-| `azure-health-check.ps1` | Checks all resources are provisioned and running. With `-AutoFix` it also creates missing blob containers and refreshes stale connection strings in the Function App. Run this before every deployment. |
-| `deploy.ps1` | Runs `azure-health-check.ps1 -AutoFix`, then builds, publishes, and deploys the project using the clean publish folder method. |
+| `scripts/azure-health-check.ps1` | Checks all resources are provisioned and running. With `-AutoFix` it also creates missing blob containers and refreshes stale connection strings in the Function App. Run this before every deployment. |
+| `scripts/deploy.ps1` | Runs `azure-health-check.ps1 -AutoFix`, then builds, publishes, and deploys the project. Always run from the project root: `.\scripts\deploy.ps1` |
