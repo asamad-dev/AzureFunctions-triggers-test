@@ -101,23 +101,36 @@ END;";
         builder.InitialCatalog = "master";
         var masterConnString = builder.ConnectionString;
 
-        await using var conn = new SqlConnection(masterConnString);
-        await conn.OpenAsync(ct);
+        try
+        {
+            await using var conn = new SqlConnection(masterConnString);
+            await conn.OpenAsync(ct);
 
-        // Database name is interpolated (not parameterisable in CREATE DATABASE)
-        // but is constrained to the value we already loaded from config.
-        var sql = $@"
+            // Database name is interpolated (not parameterisable in CREATE DATABASE)
+            // but is constrained to the value we already loaded from config.
+            var sql = $@"
 IF NOT EXISTS (SELECT 1 FROM sys.databases WHERE name = @DbName)
 BEGIN
     DECLARE @stmt NVARCHAR(200) = N'CREATE DATABASE [' + @DbName + N']';
     EXEC sp_executesql @stmt;
 END;";
 
-        await using var cmd = new SqlCommand(sql, conn);
-        cmd.Parameters.Add("@DbName", System.Data.SqlDbType.NVarChar, 128).Value = targetDb;
-        await cmd.ExecuteNonQueryAsync(ct);
+            await using var cmd = new SqlCommand(sql, conn);
+            cmd.Parameters.Add("@DbName", System.Data.SqlDbType.NVarChar, 128).Value = targetDb;
+            await cmd.ExecuteNonQueryAsync(ct);
 
-        _logger.LogInformation("SQL database {Database} ensured.", targetDb);
+            _logger.LogInformation("SQL database {Database} ensured.", targetDb);
+        }
+        catch (SqlException ex)
+        {
+            // On Azure SQL Database, the managed identity may not have access to
+            // the master database (it is only a contained user in the target DB).
+            // The database is pre-provisioned in Azure, so this is safe to skip.
+            _logger.LogWarning(
+                "Could not connect to master DB to ensure {Database} exists " +
+                "(expected on Azure SQL — database is pre-provisioned): {Message}",
+                targetDb, ex.Message);
+        }
     }
 
     /// <summary>

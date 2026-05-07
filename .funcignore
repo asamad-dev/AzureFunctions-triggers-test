@@ -23,3 +23,5 @@ sample-data
 
 # Build intermediates (publish output is taken from bin/publish via dotnet publish)
 obj
+bin
+publish
