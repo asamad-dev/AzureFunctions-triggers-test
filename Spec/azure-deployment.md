@@ -319,19 +319,30 @@ The Function App's identity needs a database user and the right roles to:
 1. Azure SQL → your database `ContactsDb` → left nav: **Query editor (preview)**.
 2. Sign in with **Microsoft Entra single sign-on** as the Entra admin you
    set in step 1.3.
-3. Run the following, replacing `func-<base>` with your Function App's
-   exact name:
+3. Run the `CREATE USER` statement first (on its own), replacing `func-<base>`
+   with your Function App's exact name:
    ```sql
    CREATE USER [func-<base>] FROM EXTERNAL PROVIDER;
+   ```
+4. Then run the three role grants in a **separate** execution:
+   ```sql
    ALTER ROLE db_datareader ADD MEMBER [func-<base>];
    ALTER ROLE db_datawriter ADD MEMBER [func-<base>];
-   ALTER ROLE db_ddladmin  ADD MEMBER [func-<base>];   -- needed because EnsureSchemaAsync issues CREATE TABLE
+   ALTER ROLE db_ddladmin   ADD MEMBER [func-<base>];
    ```
-4. Confirm the user landed:
+   > **Why separately?** If you paste all four lines at once and
+   > `CREATE USER` fails (e.g. the user already exists from a previous
+   > attempt), the Portal's query editor aborts the whole batch and the
+   > `ALTER ROLE` lines never run. Running them in two steps avoids this.
+5. Confirm the user and roles landed:
    ```sql
-   SELECT name, type_desc FROM sys.database_principals WHERE name = 'func-<base>';
+   SELECT dp.name, dp.type_desc, rp.name AS role
+   FROM sys.database_role_members drm
+   JOIN sys.database_principals dp ON dp.principal_id = drm.member_principal_id
+   JOIN sys.database_principals rp ON rp.principal_id = drm.role_principal_id
+   WHERE dp.name = 'func-<base>';
    ```
-   You should see one row with `type_desc = EXTERNAL_USER`.
+   You should see three rows: `db_datareader`, `db_datawriter`, `db_ddladmin`.
 
 ### 1.6 Add the connection-string app settings
 
@@ -369,20 +380,53 @@ The Function App's identity needs a database user and the right roles to:
      `FUNCTIONS_WORKER_RUNTIME`, `WEBSITE_USE_PLACEHOLDER_DOTNETISOLATED`)
      alone.
 
-### 1.7 Deploy the code
+### 1.7 Verify deployment readiness (optional but recommended)
+
+Before deploying, you can verify all Azure resources are correctly configured
+using the provided PowerShell verification scripts:
+
+```powershell
+# Windows PowerShell - Quick health check with auto-fix
+cd C:\path\to\AzureFunctions-triggers-test
+.\azure-health-check.ps1 -AutoFix
+```
+
+This script verifies:
+- All resources exist and are in the correct state
+- Storage containers (`incoming`, `archive`) exist
+- Connection strings in Function App settings match current keys
+- Auto-fixes common issues (missing containers, stale connection strings)
+
+**Alternative scripts** (if you prefer manual verification):
+- `.\verify-azure-deployment.ps1` — Read-only verification, no changes
+- `.\create-storage-containers.ps1` — Create missing containers only
+- `.\fix-function-app-settings.ps1` — Update connection strings only
+
+### 1.8 Deploy the code
 
 You have three good options. Pick one.
 
-#### Option A - Azure Functions Core Tools (recommended for first deploy)
+#### Option A - Azure Functions Core Tools (recommended)
 
-From the project folder:
+**Important:** Due to a known issue with solution files (`.slnx`) interfering with
+the deployment package, use the clean publish folder method:
 
 ```bash
 # macOS / Linux (zsh/bash)
 cd /path/to/AzureFunctions-triggers-test
 az login                                    # if not already signed in
 az account set --subscription "<sub-id>"    # if you have multiple subscriptions
-func azure functionapp publish func-<base>
+
+# Build and publish to a clean output folder
+dotnet publish FunctionApp1.csproj --configuration Release --output ./publish
+
+# Verify functions.metadata exists (critical for function discovery)
+ls -l publish/functions.metadata
+
+# Deploy from the publish folder
+cd publish
+func azure functionapp publish func-<base> --no-build --dotnet-isolated
+cd ..
 ```
 
 ```powershell
@@ -390,11 +434,39 @@ func azure functionapp publish func-<base>
 cd C:\path\to\AzureFunctions-triggers-test
 az login                                    # if not already signed in
 az account set --subscription "<sub-id>"    # if you have multiple subscriptions
-func azure functionapp publish func-<base>
+
+# Build and publish to a clean output folder
+dotnet publish FunctionApp1.csproj --configuration Release --output ./publish
+
+# Verify functions.metadata exists (critical for function discovery)
+dir publish\functions.metadata
+
+# Deploy from the publish folder
+cd publish
+func azure functionapp publish func-<base> --no-build --dotnet-isolated
+cd ..
 ```
 
-Core Tools builds the project locally and zip-deploys it. Wait for the output
-to print three function URLs.
+**Why this method:**
+- `dotnet publish` on the `.csproj` ensures the `functions.metadata` file is
+  correctly generated and included in the deployment package
+- `--no-build` deploys exactly what's in the publish folder (no rebuild surprises)
+- `--dotnet-isolated` specifies the .NET isolated worker runtime model
+
+**Verify deployment succeeded:**
+```powershell
+func azure functionapp list-functions func-<base>
+```
+
+Expected output:
+```
+Functions in func-<base>:
+    ArchiveFunction - [serviceBusTrigger]
+    BlobIngestFunction - [blobTrigger]
+    RowProcessorFunction - [serviceBusTrigger]
+```
+
+If you see an empty list, see the **Troubleshooting** section at the end of this document.
 
 #### Option B - VS Code Azure Functions extension
 
@@ -409,7 +481,7 @@ Use the portal's **Deployment Center** → **GitHub** flow; it generates a
 workflow file in your repo that builds and pushes on every commit. Skip if
 you're just doing one-off deploys.
 
-### 1.8 Verify the deployment
+### 1.9 Verify the deployment
 
 1. Function App → left nav: **Functions**. You should see:
    - `BlobIngestFunction`
@@ -613,6 +685,86 @@ cmd.exe** as long as you have `az` on your PATH:
 
 ```bash
 az group delete --name rg-<base> --yes --no-wait
+```
+
+---
+
+## Troubleshooting
+
+### Functions show `0 functions found` after a successful deployment
+
+**Root cause**: A `.slnx` or `.sln` solution file in the project directory
+causes `func azure functionapp publish` to exclude `functions.metadata` from
+the deployment package. Without that file the runtime cannot discover any
+functions.
+
+**Fix**: Always deploy from a clean publish folder:
+
+```powershell
+dotnet publish FunctionApp1.csproj --configuration Release --output ./publish
+cd publish
+func azure functionapp publish func-<base> --no-build --dotnet-isolated
+cd ..
+```
+
+Verify immediately:
+```powershell
+func azure functionapp list-functions func-<base>
+```
+
+---
+
+### `BlobIngestFunction` throws exceptions on every invocation, tables never created
+
+Two separate issues typically combine to cause this:
+
+**Issue A — `EnsureDatabaseAsync` cannot connect to `master`.**  
+The managed identity is a contained user in `ContactsDb` only. When
+`SqlRepository.EnsureDatabaseAsync` redirects the connection to `master`
+it is rejected, and the resulting `SqlException` aborted the whole
+`EnsureSchemaAsync` call — so `CREATE TABLE` never ran. The code already
+handles this gracefully (the exception is caught and logged as a warning).
+If you see this warning in logs it is expected and harmless.
+
+**Issue B — `ALTER ROLE` statements were not applied.**  
+If you ran all four SQL lines (`CREATE USER` + three `ALTER ROLE`) as one
+batch and `CREATE USER` failed (user already exists), the Portal aborted the
+batch and the roles were never granted. Run just the three `ALTER ROLE`
+statements on their own:
+
+```sql
+ALTER ROLE db_datareader ADD MEMBER [func-<base>];
+ALTER ROLE db_datawriter ADD MEMBER [func-<base>];
+ALTER ROLE db_ddladmin   ADD MEMBER [func-<base>];
+```
+
+After granting roles, upload a **new filename** to `incoming`. Blobs that
+already failed five delivery attempts are moved to the
+`webjobs-blobtrigger-poison` queue and will never be retried.
+
+---
+
+### Blob trigger sees the file but skips it
+
+```
+Blob 'x.csv' will be skipped ... because this blob with ETag '...' has already been processed.
+```
+
+The runtime writes a blob receipt the first time it attempts to process a
+blob. If the function crashed on that attempt the receipt still exists, so
+the file is permanently skipped. **Upload the same content under a different
+filename** to trigger a fresh invocation.
+
+---
+
+### `az storage blob upload --auth-mode login` returns permission denied
+
+Your user account does not have the *Storage Blob Data Contributor* RBAC role
+on the storage account. Use `--auth-mode key` for one-off uploads instead:
+
+```powershell
+az storage blob upload --account-name st<base> --container-name incoming \
+  --file sample-data/contacts.csv --name test.csv --auth-mode key
 ```
 
 ---
